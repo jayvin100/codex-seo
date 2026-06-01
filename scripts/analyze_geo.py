@@ -77,6 +77,7 @@ def parse_robots_blocks(robots_text: str) -> dict[str, list[str]]:
     """Parse a simple robots.txt into user-agent -> disallow rules."""
     blocks: dict[str, list[str]] = {}
     current_agents: list[str] = []
+    seen_rules = False
     for raw_line in robots_text.splitlines():
         line = raw_line.split("#", 1)[0].strip()
         if not line or ":" not in line:
@@ -84,16 +85,26 @@ def parse_robots_blocks(robots_text: str) -> dict[str, list[str]]:
         key, value = [part.strip() for part in line.split(":", 1)]
         key_lower = key.lower()
         if key_lower == "user-agent":
+            if seen_rules:
+                current_agents = []
+                seen_rules = False
             agent = value
             current_agents = current_agents + [agent] if current_agents else [agent]
             blocks.setdefault(agent, [])
         elif key_lower == "disallow":
+            seen_rules = True
             for agent in current_agents or ["*"]:
                 blocks.setdefault(agent, []).append(value)
-        elif key_lower in {"allow", "sitemap"}:
+        elif key_lower == "allow":
+            seen_rules = True
+            continue
+        elif key_lower == "sitemap":
+            current_agents = []
+            seen_rules = False
             continue
         else:
             current_agents = []
+            seen_rules = False
     return blocks
 
 

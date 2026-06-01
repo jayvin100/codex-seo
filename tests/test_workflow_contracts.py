@@ -24,6 +24,28 @@ def test_cache_roots_are_repo_relative():
     assert generate_competitor_pages.CACHE_ROOT == expected
 
 
+def test_robots_parser_does_not_leak_rules_between_agent_groups():
+    robots = """
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin/
+
+User-agent: CCBot
+Disallow: /
+"""
+    access = analyze_geo.crawler_access(robots)
+
+    assert "GPTBot" in access["allowed_search_crawlers"]
+    assert "OAI-SearchBot" in access["allowed_search_crawlers"]
+    assert "GPTBot" not in access["blocked_search_crawlers"]
+    assert "OAI-SearchBot" not in access["blocked_search_crawlers"]
+    assert "CCBot" in access["blocked_training_crawlers"]
+
+
 def test_seo_audit_wrapper_honors_output_root(monkeypatch, tmp_path: Path):
     captured = {}
 
