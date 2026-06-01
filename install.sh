@@ -2,6 +2,12 @@
 set -euo pipefail
 
 resolve_python() {
+    for candidate in python3.13 python3.12 python3.11 python3.10; do
+        if command -v "${candidate}" >/dev/null 2>&1; then
+            printf '%s\n' "${candidate}"
+            return
+        fi
+    done
     if command -v python3 >/dev/null 2>&1; then
         printf '%s\n' "python3"
         return
