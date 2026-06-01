@@ -92,10 +92,18 @@ def parse_json_stdout(step: dict[str, Any]) -> dict[str, Any] | None:
     """Parse a subprocess stdout payload as JSON when possible."""
     if not step["ok"] or not step["stdout"].strip():
         return None
+    stdout = step["stdout"].strip()
     try:
-        return json.loads(step["stdout"])
+        return json.loads(stdout)
     except json.JSONDecodeError:
-        return None
+        start = stdout.find("{")
+        end = stdout.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            return None
+        try:
+            return json.loads(stdout[start : end + 1])
+        except json.JSONDecodeError:
+            return None
 
 
 def bootstrap_environment(
