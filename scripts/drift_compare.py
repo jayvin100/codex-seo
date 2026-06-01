@@ -27,6 +27,7 @@ sys.path.insert(0, SCRIPTS_DIR)
 
 from google_auth import validate_url  # noqa: E402
 from drift_baseline import (  # noqa: E402
+    DB_PATH,
     fetch_cwv_data,
     fetch_page_data,
     hash_content,

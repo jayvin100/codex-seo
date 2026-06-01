@@ -40,7 +40,7 @@ Navigate to **APIs & Services > Library** and enable:
 ## Step 4: Create a Service Account
 
 1. **IAM & Admin > Service Accounts > Create Service Account**
-2. Name: `codex-seo` (or similar)
+2. Name: `claude-seo` (or similar)
 3. Skip optional permissions steps
 4. Click on the created service account > **Keys > Add Key > Create new key > JSON**
 5. Download the JSON file and store it securely (e.g., `~/.config/codex-seo/service_account.json`)
@@ -51,8 +51,8 @@ The JSON file looks like:
   "type": "service_account",
   "project_id": "your-project-id",
   "private_key_id": "...",
-  "private_key": "[redacted service-account private key]",
-  "client_email": "codex-seo@your-project.iam.gserviceaccount.com",
+  "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+  "client_email": "claude-seo@your-project.iam.gserviceaccount.com",
   "client_id": "...",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
   "token_uri": "https://oauth2.googleapis.com/token"
@@ -117,7 +117,7 @@ Credential Tier: 2 -- Full (API key + Service Account + GA4)
   [OK] Chrome UX Report (CrUX) API
   [OK] CrUX History API
   [OK] Google Search Console API
-       Service account: codex-seo@your-project.iam.gserviceaccount.com
+       Service account: claude-seo@your-project.iam.gserviceaccount.com
   [OK] Google Indexing API v3
   [OK] GA4 Data API v1beta
 ```

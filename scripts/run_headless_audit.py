@@ -32,6 +32,7 @@ from seo_pipeline_utils import (
     ensure_cache_gitignore,
     extract_language_country,
     extract_visible_text,
+    fetch_rendered_html,
     normalize_site_root,
     now_iso,
     severity_for_issue,
@@ -589,7 +590,7 @@ def run_audit_with_output_root(
     normalized = validate_public_url(target)
     site_root = normalize_site_root(normalized)
     session = build_session()
-    response = session.get(site_root, timeout=timeout, allow_redirects=True)
+    response = fetch_rendered_html(site_root, timeout=timeout)
     parse_data = parse_html(response.text, response.url)
     visible_text = extract_visible_text(response.text)
     business_type, industry = detect_business_type(parse_data, visible_text, response.url)

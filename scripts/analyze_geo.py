@@ -18,7 +18,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from parse_html import parse_html
-from seo_pipeline_utils import build_session, validate_public_url
+from seo_pipeline_utils import build_session, fetch_rendered_html, validate_public_url
 
 
 DEFAULT_TIMEOUT = 20
@@ -197,7 +197,12 @@ def analyze_geo(url: str, timeout: int = DEFAULT_TIMEOUT) -> dict[str, Any]:
     site_root = f"{parsed.scheme}://{parsed.netloc}"
     slug = slugify_path(normalized_url)
 
-    page_response, page_error = fetch_text(normalized_url, timeout)
+    page_error = None
+    try:
+        page_response = fetch_rendered_html(normalized_url, timeout=timeout)
+    except ValueError as exc:
+        page_response = None
+        page_error = str(exc)
     if page_error or page_response is None:
         return {
             "cache_type": "geo",

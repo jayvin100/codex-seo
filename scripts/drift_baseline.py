@@ -32,16 +32,7 @@ sys.path.insert(0, SCRIPTS_DIR)
 from google_auth import validate_url  # noqa: E402
 
 DB_DIR = os.path.expanduser("~/.cache/codex-seo/drift")
-LEGACY_DB_DIR = os.path.expanduser("~/.cache/claude-seo/drift")
 DB_PATH = os.path.join(DB_DIR, "baselines.db")
-LEGACY_DB_PATH = os.path.join(LEGACY_DB_DIR, "baselines.db")
-
-
-def drift_db_path() -> str:
-    """Use the Codex drift DB, or read an existing legacy DB if no Codex DB exists."""
-    if os.path.exists(DB_PATH) or not os.path.exists(LEGACY_DB_PATH):
-        return DB_PATH
-    return LEGACY_DB_PATH
 
 # UTM parameters to strip during URL normalization
 UTM_PARAMS = {"utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"}
@@ -98,9 +89,8 @@ def url_hash(url: str) -> str:
 
 def init_db() -> sqlite3.Connection:
     """Initialize the SQLite database and return a connection."""
-    db_path = drift_db_path()
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    conn = sqlite3.connect(db_path)
+    os.makedirs(DB_DIR, exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS baselines (

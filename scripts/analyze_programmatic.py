@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 from analyze_sitemap import build_report as build_sitemap_report
 from analyze_sitemap import collect_sitemap_urls
 from parse_html import parse_html
-from seo_pipeline_utils import build_session, validate_public_site_root
+from seo_pipeline_utils import build_session, fetch_rendered_html, validate_public_site_root
 
 
 DEFAULT_TIMEOUT = 20
@@ -138,13 +138,8 @@ def fetch_page_profile(session: requests.Session, url: str, timeout: int) -> dic
         "shingles": set(),
     }
     try:
-        response = session.get(
-            url,
-            timeout=timeout,
-            allow_redirects=True,
-            headers={"User-Agent": "Mozilla/5.0 Codex-SEO-QA"},
-        )
-    except (requests.RequestException, ValueError) as exc:
+        response = fetch_rendered_html(url, timeout=timeout)
+    except ValueError as exc:
         result["error"] = str(exc)
         return result
 

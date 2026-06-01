@@ -15,11 +15,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-import requests
 from bs4 import BeautifulSoup
 
 from parse_html import parse_html
-from seo_pipeline_utils import build_session, validate_public_url
+from seo_pipeline_utils import RenderedHTMLResponse, fetch_rendered_html, validate_public_url
 
 
 DEFAULT_TIMEOUT = 20
@@ -54,18 +53,11 @@ def slugify_path(url: str) -> str:
     return path.strip("/").replace("/", "--").lower() or "homepage"
 
 
-def fetch_html(url: str, timeout: int) -> tuple[requests.Response | None, str | None]:
+def fetch_html(url: str, timeout: int) -> tuple[RenderedHTMLResponse | None, str | None]:
     """Fetch HTML and return (response, error)."""
     try:
-        session = build_session()
-        response = session.get(
-            url,
-            timeout=timeout,
-            allow_redirects=True,
-            headers={"User-Agent": "Mozilla/5.0 Codex-SEO-QA"},
-        )
-        return response, None
-    except (requests.RequestException, ValueError) as exc:
+        return fetch_rendered_html(url, timeout=timeout), None
+    except ValueError as exc:
         return None, str(exc)
 
 

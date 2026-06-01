@@ -13,6 +13,7 @@ $skillNames = @(
     "seo-cluster",
     "seo-competitor-pages",
     "seo-content",
+    "seo-content-brief",
     "seo-dataforseo",
     "seo-drift",
     "seo-ecommerce",

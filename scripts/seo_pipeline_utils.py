@@ -6,9 +6,8 @@ Shared helpers for deterministic Codex SEO pipeline scripts.
 from __future__ import annotations
 
 import json
-import ipaddress
 import re
-import socket
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -16,11 +15,13 @@ from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
+from render_page import render_page
+from url_safety import URLSafetyError, make_safe_playwright_route_handler, validate_url_strict
 
 
 DEFAULT_TIMEOUT = 20
 DEFAULT_USER_AGENT = (
-    "Mozilla/5.0 (compatible; CodexSEOHeadless/1.0; "
+    "Mozilla/5.0 (compatible; CodexSEOHeadless/2.0; "
     "+https://github.com/AgriciDaniel/codex-seo)"
 )
 
@@ -58,47 +59,11 @@ def normalize_url(target: str) -> str:
 
 
 def validate_public_url(target: str) -> str:
-    """Normalize a URL and reject private, loopback, reserved, or metadata hosts."""
-    normalized = normalize_url(target)
-    parsed = urlparse(normalized)
-    hostname = (parsed.hostname or "").strip().lower().rstrip(".")
-    if hostname in {"localhost", "metadata.google.internal", "metadata"}:
-        raise ValueError(f"Blocked URL host: {hostname}")
-
-    def blocked_ip(value: str) -> bool:
-        ip = ipaddress.ip_address(value)
-        return any(
-            [
-                ip.is_private,
-                ip.is_loopback,
-                ip.is_link_local,
-                ip.is_reserved,
-                ip.is_multicast,
-                ip.is_unspecified,
-            ]
-        )
-
+    """Normalize a URL and reject SSRF/DNS-rebinding targets via v2 safety layer."""
     try:
-        if blocked_ip(hostname):
-            raise ValueError(f"Blocked URL host: {hostname}")
-    except ValueError as exc:
-        if "Blocked URL host" in str(exc):
-            raise
-
-    try:
-        addresses = socket.getaddrinfo(hostname, None)
-    except socket.gaierror as exc:
-        raise ValueError(f"Unable to resolve URL host: {hostname}") from exc
-
-    for address in {item[4][0] for item in addresses}:
-        try:
-            if blocked_ip(address):
-                raise ValueError(f"Blocked URL host: {hostname}")
-        except ValueError as exc:
-            if "Blocked URL host" in str(exc):
-                raise
-            raise ValueError(f"Invalid resolved address for URL host: {hostname}") from exc
-
+        normalized, _pinned_ip = validate_url_strict(normalize_url(target))
+    except URLSafetyError as exc:
+        raise ValueError(f"Blocked URL host: {exc}") from exc
     return normalized
 
 
@@ -184,16 +149,7 @@ class PublicURLSession(requests.Session):
 
 def install_playwright_public_url_guard(page: Any) -> None:
     """Block Playwright navigation/subresource requests to non-public URLs."""
-
-    def guard(route: Any, request: Any) -> None:
-        try:
-            validate_public_url(request.url)
-        except ValueError:
-            route.abort()
-            return
-        route.continue_()
-
-    page.route("**/*", guard)
+    page.route("**/*", make_safe_playwright_route_handler())
 
 
 def build_session() -> requests.Session:
@@ -201,6 +157,40 @@ def build_session() -> requests.Session:
     session = PublicURLSession()
     session.headers.update({"User-Agent": DEFAULT_USER_AGENT})
     return session
+
+
+@dataclass
+class RenderedHTMLResponse:
+    """Small response-shaped object for rendered analysis HTML."""
+
+    text: str
+    url: str
+    headers: dict[str, str] = field(default_factory=dict)
+    status_code: int = 200
+    history: list[Any] = field(default_factory=list)
+
+
+def fetch_rendered_html(url: str, timeout: int = DEFAULT_TIMEOUT, mode: str = "auto") -> RenderedHTMLResponse:
+    """Fetch HTML through claude-seo v2 renderer so SPA pages expose auditable DOM."""
+    normalized = validate_public_url(url)
+    result = render_page(
+        normalized,
+        mode=mode,
+        timeout_ms=max(timeout, 1) * 1000,
+        user_agent=DEFAULT_USER_AGENT,
+    )
+    if result.get("error"):
+        raise ValueError(str(result["error"]))
+    html = result.get("content") or result.get("raw_content") or ""
+    if not html:
+        raise ValueError("Rendered page returned no HTML content")
+    return RenderedHTMLResponse(
+        text=html,
+        url=str(result.get("url") or normalized),
+        headers=dict(result.get("headers") or {}),
+        status_code=int(result.get("status_code") or 0),
+        history=list(result.get("redirect_chain") or []),
+    )
 
 
 def extract_language_country(html_lang: str | None, hostname: str) -> tuple[str, str | None]:

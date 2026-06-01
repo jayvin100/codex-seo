@@ -1,4 +1,4 @@
-# Prompt Engineering Reference: Banana Image Generation
+# Prompt Engineering Reference: Claude Banana
 
 > Load this on-demand when constructing complex prompts or when the user
 > asks about prompt techniques. Do NOT load at startup.

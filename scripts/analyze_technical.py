@@ -17,7 +17,7 @@ from analyze_performance import analyze_performance
 from analyze_sitemap import build_report as build_sitemap_report
 from fetch_page import GOOGLEBOT_USER_AGENT, fetch_page
 from parse_html import parse_html
-from seo_pipeline_utils import DEFAULT_TIMEOUT, build_session, now_iso, status_from_score, url_slug, validate_public_url
+from seo_pipeline_utils import DEFAULT_TIMEOUT, build_session, fetch_rendered_html, now_iso, status_from_score, url_slug, validate_public_url
 
 
 SECURITY_HEADERS = [
@@ -48,7 +48,7 @@ def analyze_technical(url: str, timeout: int = DEFAULT_TIMEOUT) -> dict[str, obj
     """Analyze technical SEO signals for a URL."""
     normalized_url = validate_public_url(url)
     session = build_session()
-    response = session.get(normalized_url, timeout=timeout, allow_redirects=True)
+    response = fetch_rendered_html(normalized_url, timeout=timeout)
 
     parse_data = parse_html(response.text, response.url)
     sitemap = build_sitemap_report(response.url, timeout=timeout, check_limit=100)

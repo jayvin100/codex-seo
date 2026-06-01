@@ -20,35 +20,25 @@ import os
 import sys
 from typing import Optional
 
-# Import SSRF protection from google_auth (reuse, don't duplicate)
+# Import SSRF protection from the canonical url_safety module.
+# google_auth.validate_url is a back-compat wrapper around the same function.
 _SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, _SCRIPTS_DIR)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
 try:
-    from google_auth import validate_url
-except ImportError:
-    # Fallback: basic URL validation if google_auth not available
-    def validate_url(url: str) -> bool:
-        from urllib.parse import urlparse
-        parsed = urlparse(url)
-        if parsed.scheme not in ("http", "https"):
-            return False
-        if not parsed.hostname:
-            return False
-        blocked = [
-            "localhost",
-            "127.0.0.1",
-            ".".join(("0", "0", "0", "0")),
-            "::1",
-            "metadata.google.internal",
-        ]
-        if parsed.hostname in blocked:
-            return False
-        return True
+    from url_safety import validate_url
+except ImportError as _import_exc:
+    # Hard fail: a private-IP/loopback fallback that omits SSRF checks is
+    # worse than no validation at all. The previous fallback shipped in
+    # v1.9.0 silently allowed private IP literals and was flagged in the
+    # cybersecurity audit (v2.0.0 Phase H). Refuse to run instead.
+    raise RuntimeError(
+        "scripts/url_safety.py is required for SSRF protection. "
+        "Install with: pip install -r requirements.txt"
+    ) from _import_exc
 
 CONFIG_PATH = os.path.expanduser("~/.config/codex-seo/backlinks-api.json")
-LEGACY_CONFIG_PATH = os.path.expanduser("~/.config/claude-seo/backlinks-api.json")
 CACHE_DIR = os.path.expanduser("~/.cache/codex-seo/commoncrawl")
-LEGACY_CACHE_DIR = os.path.expanduser("~/.cache/claude-seo/commoncrawl")
 
 # Which services need which auth type
 SERVICE_AUTH = {
@@ -65,14 +55,6 @@ SERVICE_NAMES = {
     "commoncrawl": "Common Crawl Web Graph",
     "verify": "Backlink Verification Crawler",
 }
-
-
-def _first_existing_path(*paths: str) -> str:
-    """Return the first existing path, or the first candidate if none exist."""
-    for path in paths:
-        if os.path.exists(path):
-            return path
-    return paths[0]
 
 
 def load_config() -> dict:
@@ -93,11 +75,10 @@ def load_config() -> dict:
         "commoncrawl_cache_dir": CACHE_DIR,
     }
 
-    # Load from Codex config, with read-only fallback for old Claude SEO installs.
-    config_path = _first_existing_path(CONFIG_PATH, LEGACY_CONFIG_PATH)
-    if os.path.exists(config_path):
+    # Load from config file
+    if os.path.exists(CONFIG_PATH):
         try:
-            with open(config_path, "r") as f:
+            with open(CONFIG_PATH, "r") as f:
                 file_config = json.load(f)
             for k, v in file_config.items():
                 if v is not None and v != "":
@@ -113,10 +94,9 @@ def load_config() -> dict:
         config["bing_api_key"] = os.environ.get("BING_WEBMASTER_API_KEY")
 
     # Expand cache dir path
-    cache_dir = config.get("commoncrawl_cache_dir", CACHE_DIR)
-    if cache_dir == LEGACY_CACHE_DIR and not os.path.exists(CACHE_DIR):
-        cache_dir = LEGACY_CACHE_DIR
-    config["commoncrawl_cache_dir"] = os.path.expanduser(cache_dir)
+    config["commoncrawl_cache_dir"] = os.path.expanduser(
+        config.get("commoncrawl_cache_dir", CACHE_DIR)
+    )
 
     return config
 

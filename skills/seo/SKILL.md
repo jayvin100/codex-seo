@@ -6,7 +6,7 @@ argument-hint: "[command] [url]"
 license: MIT
 metadata:
   author: AgriciDaniel
-  version: "1.9.6"
+  version: "2.0.0"
   category: seo
 ---
 
@@ -19,7 +19,7 @@ Use the matching specialist skill directly when the request is narrow.
 **Scripts:** Located at the plugin root `scripts/` directory.
 
 Comprehensive SEO analysis across all industries (SaaS, local services,
-e-commerce, publishers, agencies). Orchestrates 26 specialized sub-skills and 24 Codex
+e-commerce, publishers, agencies). Orchestrates 27 specialized sub-skills and 24 Codex
 agent profiles, with optional MCP-backed extensions for DataForSEO, Firecrawl, and image generation.
 
 ## Shared Data Cache
@@ -50,6 +50,7 @@ Check these cache files when present:
 | `/seo images <url or optimize>` | Image SEO: on-page audit, SERP analysis, file optimization |
 | `/seo technical <url>` | Technical SEO audit (9 categories) |
 | `/seo content <url>` | E-E-A-T and content quality analysis |
+| `/seo content-brief <topic or url>` | Detailed SEO content brief with target keywords, outline, internal links |
 | `/seo geo <url>` | AI Overviews / Generative Engine Optimization |
 | `/seo plan <business-type>` | Strategic SEO planning |
 | `/seo programmatic [url\|plan]` | Programmatic SEO analysis and planning |
@@ -194,7 +195,7 @@ Weighted aggregate of all categories:
 
 ## Sub-Skills
 
-This skill orchestrates 26 specialized sub-skills, including optional extension-backed workflows:
+This skill orchestrates 27 specialized sub-skills, including optional extension-backed workflows:
 
 1. **seo-audit** -- Full website audit with parallel delegation
 2. **seo-page** -- Deep single-page analysis

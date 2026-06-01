@@ -2,7 +2,7 @@
 """
 Generate an HTML report for SEO drift comparison results.
 
-Uses the codex-seo color palette for severity-coded cards.
+Uses the claude-seo color palette for severity-coded cards.
 
 Usage:
     python drift_report.py <comparison_json_file> [--output report.html]
@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 
 
 # ---------------------------------------------------------------------------
-# Codex SEO color palette
+# Claude-SEO color palette
 # ---------------------------------------------------------------------------
 COLORS = {
     "navy": "#1e3a5f",

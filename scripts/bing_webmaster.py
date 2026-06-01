@@ -74,7 +74,7 @@ def _bing_request(endpoint: str, api_key: str, params: Optional[dict] = None,
 
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "CodexSEO/1.8.0",
+        "User-Agent": "ClaudeSEO/1.8.0",
     }
 
     try:

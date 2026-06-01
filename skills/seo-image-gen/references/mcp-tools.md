@@ -18,7 +18,7 @@ Generate an image from a text prompt.
 **Example usage in Codex:**
 ```
 User: "Generate a sunset over mountains in watercolor style"
-→ Codex calls gemini_generate_image with prompt
+→ Claude calls gemini_generate_image with prompt
 → Returns image path and description
 ```
 
@@ -36,7 +36,7 @@ Edit an existing image with text instructions.
 **Example:**
 ```
 User: "Remove the background from ~/Documents/photo.png"
-→ Codex calls gemini_edit_image with path and instruction
+→ Claude calls gemini_edit_image with path and instruction
 ```
 
 ### gemini_chat

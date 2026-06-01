@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This repository contains **Codex SEO**, a Codex-first SEO analysis skill suite synced from `AgriciDaniel/claude-seo` v1.9.6 plus post-tag fixes.
+This repository contains **Codex SEO**, a Codex-first SEO analysis skill suite synced from `AgriciDaniel/claude-seo` v2.0.0 plus Codex packaging, runners, cache artifacts, and TOML agents.
 
 The canonical skill tree lives under `skills/`. The main orchestrator is `skills/seo/SKILL.md`; the old top-level `seo/` folder is intentionally not used.
 
@@ -31,7 +31,20 @@ codex-seo/
 - Python dependencies install into `~/.codex/skills/seo/.venv/`.
 - All skills include a shared cache Step 0 and cache write guidance.
 - New config paths use `~/.config/codex-seo/`; legacy `~/.config/claude-seo/` paths may be read only as migration fallback.
+- Keep multi-platform frontmatter portable across Cursor, Gemini CLI, Codex, Cline, Aider, and Antigravity. Run `python scripts/portability_check.py` before release.
 - Run `python -m pytest tests/` after changes.
+
+## Tool Name Portability
+
+| Claude tool | Codex equivalent | Cline/Aider note |
+|---|---|---|
+| Read | file read | Use local file reads. |
+| Write | apply patch/write artifact | Prefer patchable file writes. |
+| Edit | apply_patch | Keep diffs scoped. |
+| Bash | shell command | Use repo scripts where possible. |
+| Glob | file search | Prefer `rg --files`. |
+| Grep | text search | Prefer `rg`. |
+| WebFetch | browser/web fetch | Use platform web/browser tool when available. |
 
 ## Key Principles
 
